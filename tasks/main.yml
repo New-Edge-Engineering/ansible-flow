@@ -1,0 +1,152 @@
+---
+# create groups and user
+- name: create jetty group
+  group:
+    name=jetty
+    system=yes
+
+- name: create flow group
+  group:
+    name=flow
+    system=yes
+
+- name: create flow user
+  user:
+    name=flow
+    comment="start flowing"
+    group=flow
+    groups=jetty
+    system=yes
+
+# install flow software
+- name: install supporting software
+  apt: pkg={{ item }}
+  with_items:
+    - unzip
+    - python-pip
+  tags:
+    - flow
+    - install
+    - packages
+
+- name: install ansible supporting python packages
+  pip: name={{ item }}
+  with_items:
+    - urlparse2
+  tags:
+    - flow
+    - install
+    - packages
+
+- name: create root software directory
+  file:
+    dest=/opt/net/startflowing
+    state=directory
+    owner=flow
+    group=flow
+  tags:
+    - flow
+    - install
+
+- name: download flow software
+  get_url:
+    url=http://software.newedgeengineering.net/thirdparty/net/startflowing/Flow-0.3-BETA.zip
+    dest=/opt/net/startflowing/
+  register: flow_downloaded
+  tags:
+    - flow
+    - install
+
+- name: extract flow to /opt/net/startflowing
+  command: "unzip -u /opt/net/startflowing/Flow-0.3-BETA.zip -d /opt/net/startflowing"
+  when: flow_downloaded|changed
+  tags:
+    - flow
+    - install
+
+- name: move extracted Flow to include version number
+  command: "mv /opt/net/startflowing/Flow /opt/net/startflowing/Flow-0.3-BETA"
+  when: flow_downloaded|changed
+  tags:
+    - flow
+    - install
+
+- name: correct flow ownership and permissions
+  file:
+    path="/opt/net/startflowing/Flow-0.3-BETA"
+    owner=flow
+    recurse=yes
+    state=directory
+    mode=0755
+  when: flow_downloaded|changed
+  tags:
+    - flow
+    - install
+
+- name: correct extracted files permissions
+  shell: "chmod 0644 -R /opt/net/startflowing/Flow-0.3-BETA/*.{{ item }}"
+  when: flow_downloaded|changed
+  with_items:
+    - war
+    - jar
+    - xml
+  tags:
+    - flow
+    - install
+
+- name: update link to latest flow
+  file:
+    src="/opt/net/startflowing/Flow-0.3-BETA"
+    dest=/opt/net/startflowing/flow
+    state=link
+    owner=flow
+    group=flow
+  when: flow_downloaded|changed
+  tags:
+    - flow
+    - install
+
+- name: create supporting directories
+  file:
+    dest={{ item }}
+    state=directory
+    mode=755
+    owner=flow
+    group=flow
+  with_items:
+    - /var/log/flow
+    - /var/lib/flow
+    - /var/lib/flow/flow
+    - /var/lib/flow/.flow/
+    - /var/lib/flow/.flow/database
+    - /var/lib/flow/.flow/config
+  tags:
+    - flow
+    - install
+
+- name: create flow configuration
+  template:
+    dest=/var/lib/flow/.flow/config/flowconfig.groovy
+    src=flowconfig.groovy.j2
+    mode=644
+    owner=flow
+    group=flow
+  notify:
+    - restart flow
+  tags:
+    - flow
+    - configuration
+
+- name: create upstart configuration for flow
+  copy:
+    dest=/etc/init/flow.conf
+    src=flow.conf
+    mode=0644
+  notify:
+    - restart flow
+  tags:
+    - flow
+    - configuration
+
+# install plugins
+

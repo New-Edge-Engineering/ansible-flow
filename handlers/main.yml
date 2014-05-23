@@ -1,0 +1,3 @@
+---
+- name: restart flow
+  service: name=flow state=restarted
