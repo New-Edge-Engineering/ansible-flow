@@ -10,12 +10,19 @@
     name=flow
     system=yes
 
+- name: create base net directory
+  file:
+    mode=0755
+    path=/opt/net
+    state=directory
+
 - name: create flow user
   user:
     name=flow
     comment="start flowing"
     group=flow
     groups=jetty
+    home=/opt/net/startflowing
     system=yes
 
 # install flow software
