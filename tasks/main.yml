@@ -4,17 +4,19 @@
   group:
     name=jetty
     system=yes
+  tags:
+    - flow
+    - users
+    - groups
 
 - name: create flow group
   group:
     name=flow
     system=yes
-
-- name: create base net directory
-  file:
-    mode=0755
-    path=/opt/net
-    state=directory
+  tags:
+    - flow
+    - users
+    - groups
 
 - name: create flow user
   user:
@@ -22,8 +24,12 @@
     comment="start flowing"
     group=flow
     groups=jetty
-    home=/opt/net/startflowing
+    home=/var/lib/flow
     system=yes
+  tags:
+    - flow
+    - users
+    - groups
 
 # install flow software
 - name: install supporting software
@@ -149,6 +155,8 @@
     dest=/etc/init/flow.conf
     src=flow.conf
     mode=0644
+    owner=root
+    group=root
   notify:
     - restart flow
   tags:
