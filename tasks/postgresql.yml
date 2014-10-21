@@ -1,0 +1,44 @@
+---
+- name: Flow | Ensure postgresql library directories exist
+  file:
+    dest=/opt/flow/lib/jdbc/postgresql/
+    state=directory
+    recurse=yes
+    mode=0655
+  tags:
+    - flow
+    - install
+    - jdbc
+
+- name: Flow | Ensure jdbc driver is installed
+  get_url:
+    dest=/opt/flow/lib/jdbc/postgresql/postgresql-9.3-1101.jdbc3.jar
+    url="http://jdbc.postgresql.org/download/postgresql-9.3-1101.jdbc3.jar"
+  tags:
+    - flow
+    - install
+    - jdbc
+
+- name: Flow | Ensure jdbc drive is accessable by flow process
+  file:
+    path="/opt/flow/lib/jdbc/postgresql"
+    owner=flow
+    recurse=yes
+    state=directory
+    mode=0755
+  tags:
+    - flow
+    - install
+    - jdbc
+
+- name: Flow | Ensure flow drive is postgresql
+  lineinfile:
+    dest: /var/lib/flow/.flow/config/flowconfig.groovy
+    line: '    driverClassName="org.postgresql.Driver"'
+    regexp: "^    driverClassName="
+
+- name: Flow | Ensure the database connection is using postgresql jdbc
+  lineinfile:
+    dest: /var/lib/flow/.flow/config/flowconfig.groovy
+    line: '    url="jdbc:postgresql://{{ flow_database_host }}:{{ flow_database_port }}/{{ flow_database_name }}"'
+    regexp: "^    url="

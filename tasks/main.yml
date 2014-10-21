@@ -53,7 +53,7 @@
 
 - name: create root software directory
   file:
-    dest=/opt/net/startflowing
+    dest=/opt/flow/lib/main
     state=directory
     owner=flow
     group=flow
@@ -61,44 +61,51 @@
     - flow
     - install
 
+- name: Flow | check to see if download exists
+  stat:
+    path: /tmp/Flow-0.3-BETA.zip
+  register: flow_download_exists
+
 - name: download flow software
   get_url:
     url=http://software.newedgeengineering.net/thirdparty/net/startflowing/Flow-0.3-BETA.zip
-    dest=/opt/net/startflowing/
+    dest=/tmp/
+  when: flow_download_exists.stat.exists == false
   register: flow_downloaded
   tags:
     - flow
     - install
 
-- name: extract flow to /opt/net/startflowing
-  command: "unzip -u /opt/net/startflowing/Flow-0.3-BETA.zip -d /opt/net/startflowing"
+- name: Flow | extract flow to /opt/flow/lib/main
+  command: "unzip -u /tmp/Flow-0.3-BETA.zip -d /opt/flow/lib/main"
   when: flow_downloaded|changed
+  register: flow_extracted
   tags:
     - flow
     - install
 
 - name: move extracted Flow to include version number
-  command: "mv /opt/net/startflowing/Flow /opt/net/startflowing/Flow-0.3-BETA"
-  when: flow_downloaded|changed
+  command: "mv /opt/flow/lib/main/Flow /opt/flow/lib/main/Flow-0.3-BETA"
+  when: flow_extracted|changed
   tags:
     - flow
     - install
 
 - name: correct flow ownership and permissions
   file:
-    path="/opt/net/startflowing/Flow-0.3-BETA"
+    path="/opt/flow/lib/main/Flow-0.3-BETA"
     owner=flow
     recurse=yes
     state=directory
     mode=0755
-  when: flow_downloaded|changed
+  when: flow_extracted|changed
   tags:
     - flow
     - install
 
 - name: correct extracted files permissions
-  shell: "chmod 0644 -R /opt/net/startflowing/Flow-0.3-BETA/*.{{ item }}"
-  when: flow_downloaded|changed
+  shell: "chmod 0644 -R /opt/flow/lib/main/Flow-0.3-BETA/*.{{ item }}"
+  when: flow_extracted|changed
   with_items:
     - war
     - jar
@@ -109,12 +116,12 @@
 
 - name: update link to latest flow
   file:
-    src="/opt/net/startflowing/Flow-0.3-BETA"
-    dest=/opt/net/startflowing/flow
+    src="/opt/flow/lib/main/Flow-0.3-BETA"
+    dest=/opt/flow/bin
     state=link
     owner=flow
     group=flow
-  when: flow_downloaded|changed
+  when: flow_extracted|changed
   tags:
     - flow
     - install
@@ -151,9 +158,9 @@
     - configuration
 
 - name: create upstart configuration for flow
-  copy:
+  template:
     dest=/etc/init/flow.conf
-    src=flow.conf
+    src=flow.conf.j2
     mode=0644
     owner=root
     group=root
@@ -162,6 +169,11 @@
   tags:
     - flow
     - configuration
+
+- name: Flow | Ensure postgresql database driver is in place
+  include: postgresql.yml
+  when: flow_database_type == 'postgresql'
+
 
 # install plugins
 

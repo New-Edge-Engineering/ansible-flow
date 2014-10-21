@@ -14,12 +14,16 @@ respawn limit 10 30
 setgid jetty
 setuid flow
 
-chdir /opt/net/startflowing/flow/
+chdir /opt/flow/bin/
 
 env JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
 env JAVA_OPTIONS="-Xmx1024m -XX:MaxPermSize=768m -XX:PermSize=256m -DFLOW_HOME=/var/lib/flow"
 env JAVA_APP=jetty-runner-8.1.9.jar
-env APP_OPTIONS="--lib /opt/jdbc/postgresql/9.3/ --port 8082 --path /flowui flowui-0.3.war"
+{% if flow_database_type == 'h2' %}
+env APP_OPTIONS="--port 8082 --path /flowui flowui-0.3.war"
+{% else %}
+env APP_OPTIONS="--lib /opt/flow/lib/jdbc/{{ flow_database_type }}/ --port 8082 --path /flowui flowui-0.3.war"
+{% endif %}
 env LOGFILE=/var/log/flow/jetty.log
 
 script

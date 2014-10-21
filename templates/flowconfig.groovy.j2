@@ -1,21 +1,21 @@
 dataSource {
-    driverClassName="org.h2.Driver"
     dbCreate = "update"
+    driverClassName="org.h2.Driver"
     url="jdbc:h2:file:/var/lib/flow/.flow/database/flow;MVCC=TRUE"
     username = "{{ flow_database_user }}"
     password = "{{ flow_database_pass }}"
 }
 flow {
-    schemaStrategy='true'
-    serverUrl='http://localhost:8082/flowui/'
-    mailServerDefaultFrom=''
-    mailServerUseSSL='false'
-    mailServerPassword=''
-    mailServerUsername=''
-    mailServerPort='25'
-    mailServerHost='localhost'
-    mailServerEmailSuffix=''
-    jenkinsCliUrl='http://localhost:8080/'
-    jenkinsUrl='http://localhost:8080/'
+    schemaStrategy="true"
+    serverUrl="http://localhost:8082/flowui/"
+    mailServerDefaultFrom=""
+    mailServerUseSSL="false"
+    mailServerPassword=""
+    mailServerUsername=""
+    mailServerPort="25"
+    mailServerHost="localhost"
+    mailServerEmailSuffix=""
+    jenkinsCliUrl="http://localhost:8080/"
+    jenkinsUrl="http://localhost:8080/"
     jenkinsFlowAdminPassword="{{ flow_admin_pass }}"
 }
