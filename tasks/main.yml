@@ -61,16 +61,22 @@
     - flow
     - install
 
+- name: Flow | check to see if flow installed
+  stat:
+    path: /opt/flow/lib/main/Flow-0.3-BETA
+  register: flow_install
+
 - name: Flow | check to see if download exists
   stat:
     path: /tmp/Flow-0.3-BETA.zip
-  register: flow_download_exists
+  register: flow_download
+  when: flow_install.stat.exists == false
 
 - name: download flow software
   get_url:
     url=http://software.newedgeengineering.net/thirdparty/net/startflowing/Flow-0.3-BETA.zip
     dest=/tmp/
-  when: flow_download_exists.stat.exists == false
+  when: flow_install.stat.exists == false and flow_download.stat.exists == false
   register: flow_downloaded
   tags:
     - flow
